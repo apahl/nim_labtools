@@ -3,7 +3,7 @@
 compile for Linux:
 nim -d:release c solution_calc_gui.nim
 compile for windows with:
-nim --os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc --app:gui -d:release -o:SolutionCalculator.exe c solution_calc_gui.nim
+nim --os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc --app:gui -d:release -o:bin/SolutionCalculator.exe c solution_calc_gui.nim
 ]#
 
 import
