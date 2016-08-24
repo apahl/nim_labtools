@@ -35,7 +35,7 @@ template replaceComma() =
     useComma = true
 
 template formatRsltText() =
-  rsltText = "{0:.3f}".fmt(calcValue)
+  rsltText = "{0:.2f}".fmt(calcValue)
   if useComma:
     rsltText = rsltText.replace(".", ",")
 

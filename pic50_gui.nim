@@ -1,14 +1,14 @@
 # pic50_gui.nim
 #[
 compile for Linux with:
-nim -d:release c pic50_gui.nim
+nim -d:release -o:bin/pic50_gui c pic50_gui.nim
 compile for windows with:
 nim --os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc --app:gui -d:release -o:bin/pIC50.exe c pic50_gui.nim
 ]#
 import
   os,
   strutils,
-  tables,
+  # tables,
   strfmt,
   ui,
   conversions
@@ -34,7 +34,7 @@ template replaceComma() =
     useComma = true
 
 template formatRsltText() =
-  rsltText = "{0:.3f}".fmt(calcValue)
+  rsltText = "{0:.2f}".fmt(calcValue)
   if useComma:
     rsltText = rsltText.replace(".", ",")
 
@@ -57,71 +57,42 @@ proc onBtnCalcClicked(b: ptr Button; data: pointer) {.cdecl.} =
   var
     ctext: cstring
     whatToCalc: Fields
+    conc: ConcUnits
     text, rsltText: string
-    nbrMolwt, nbrWeight, nbrConc, nbrVol, calcValue: float
+    nbr_IC50, nbr_pIC50, calcValue: float
     numOfFilledFields = 0
     valError = false
 
   echo "Calc clicked."
-  # Molwt
-  ctext = entryText(entryMolwt)
+  # IC50
+  ctext = entryText(entry_IC50)
   text = $ctext
   freeText(ctext)
   if text != "":
     replaceComma()
     try:
-      nbrMolwt = text.parseFloat
+      nbr_IC50 = text.parseFloat
       numOfFilledFields += 1
     except ValueError:
       echo "No number."
       valError = true
   else:
-    whatToCalc = fMolWt
+    whatToCalc = fIC50
 
-  # Weight
-  ctext = entryText(entryWeight)
+  # pIC50
+  ctext = entryText(entry_pIC50)
   text = $ctext
   freeText(ctext)
   if text != "":
     replaceComma()
     try:
-      nbrWeight = text.parseFloat
+      nbr_pIC50 = text.parseFloat
       numOfFilledFields += 1
     except ValueError:
       echo "No number."
       valError = true
   else:
-    whatToCalc = fWeight
-
-  # Conc
-  ctext = entryText(entryConc)
-  text = $ctext
-  freeText(ctext)
-  if text != "":
-    replaceComma()
-    try:
-      nbrConc = text.parseFloat
-      numOfFilledFields += 1
-    except ValueError:
-      echo "No number."
-      valError = true
-  else:
-    whatToCalc = fConc
-
-  # Vol
-  ctext = entryText(entryVol)
-  text = $ctext
-  freeText(ctext)
-  if text != "":
-    replaceComma()
-    try:
-      nbrVol = text.parseFloat
-      numOfFilledFields += 1
-    except ValueError:
-      echo "No number."
-      valError = true
-  else:
-    whatToCalc = fVol
+    whatToCalc = fpIC50
 
   if valError:
     echo "At least one field could not be converted to a number."
@@ -129,40 +100,25 @@ proc onBtnCalcClicked(b: ptr Button; data: pointer) {.cdecl.} =
     echo "Nothing will be calculated."
     return
 
-  if numOfFilledFields != 3:
+  if numOfFilledFields != 1:
     echo "Too many or too few fields are filled."
     label1.labelSetText("Too many or too few fields are filled.")
     echo "Nothing will be calculated."
     return
 
   echo "Field ", whatToCalc, " will be calculated."
-  if whatToCalc == fVol:
-    calcValue = calcVol(nbrWeight, comboboxSelected(cbWeightUnit).WeightUnits,
-                        nbrConc, comboboxSelected(cbConcUnit).ConcUnits,
-                        nbrMolwt, comboboxSelected(cbVolUnit).VolumeUnits)
+  if whatToCalc == fIC50:
+    conc = comboboxSelected(cbConcUnit).ConcUnits
+    calcValue = calc_IC50(nbr_pIC50, conc)
+    scaleResult(calcValue, conc)
     formatRsltText()
-    entrySetText(entryVol, rsltText)
+    comboboxSetSelected(cbConcUnit, conc.ord)
+    entrySetText(entry_IC50, rsltText)
 
-  if whatToCalc == fWeight:
-    calcValue = calcWeight(nbrVol, comboboxSelected(cbVolUnit).VolumeUnits,
-                           nbrConc, comboboxSelected(cbConcUnit).ConcUnits,
-                           nbrMolwt, comboboxSelected(cbWeightUnit).WeightUnits)
+  if whatToCalc == fpIC50:
+    calcValue = calc_pIC50(nbr_IC50, comboboxSelected(cbConcUnit).ConcUnits)
     formatRsltText()
-    entrySetText(entryWeight, rsltText)
-
-  if whatToCalc == fConc:
-    calcValue = calcConc(nbrWeight, comboboxSelected(cbWeightUnit).WeightUnits,
-                         nbrVol, comboboxSelected(cbVolUnit).VolumeUnits,
-                         nbrMolwt, comboboxSelected(cbConcUnit).ConcUnits)
-    formatRsltText()
-    entrySetText(entryConc, rsltText)
-
-  if whatToCalc == fMolWt:
-    calcValue = calcMolwt(nbrWeight, comboboxSelected(cbWeightUnit).WeightUnits,
-                          nbrVol, comboboxSelected(cbVolUnit).VolumeUnits,
-                          nbrConc, comboboxSelected(cbConcUnit).ConcUnits)
-    formatRsltText()
-    entrySetText(entryMolwt, rsltText)
+    entrySetText(entry_pIC50, rsltText)
 
   label1.labelSetText($whatToCalc & " was calculated.")
 
@@ -171,8 +127,7 @@ proc main() =
   var
     o: ui.InitOptions
     err: cstring
-    boxMain, boxColumns, boxCol1, boxCol2: ptr Box
-    boxWeight, boxMolwt, boxConc, boxVol: ptr Box
+    boxMain, boxColumns, boxCol1, boxCol2, boxCol3, boxColBlank: ptr Box
     btnCalc, btnClear: ptr Button
 
   err = ui.init(addr(o))
@@ -181,10 +136,11 @@ proc main() =
     freeInitError(err)
     return
 
-  mainwin = newWindow("COMAS Concentration Calculator", 520, 280, 1)
+  mainwin = newWindow("COMAS pIC50 Calculator", 470, 240, 1)
   windowSetMargined(mainwin, 1)
   windowOnClosing(mainwin, onClosing, nil)
   onShouldQuit(shouldQuit, nil)
+
   boxMain = newVerticalBox()
   boxSetPadded(boxMain, 1)
   windowSetChild(mainwin, boxMain)
@@ -197,62 +153,43 @@ proc main() =
   boxSetPadded(boxCol1, 1)
   boxAppend(boxColumns, boxCol1, 0)
 
-  boxAppend(boxCol1, newLabel("Molwt:"), 0)
-  boxMolwt = newHorizontalBox()
-  boxSetPadded(boxMolwt, 1)
-  boxAppend(boxCol1, boxMolwt, 0)
-  entryMolwt = newEntry()
-  boxAppend(boxMolwt, entryMolwt, 0)
-  boxAppend(boxMolwt, newLabel("g / mol"), 0)
+  boxAppend(boxCol1, newLabel("IC50:"), 0)
+  entry_IC50 = newEntry()
+  boxAppend(boxCol1, entry_IC50, 0)
 
-  boxAppend(boxCol1, newLabel("Concentration:"), 0)
-  boxConc = newHorizontalBox()
-  boxSetPadded(boxConc, 1)
-  boxAppend(boxCol1, boxConc, 0)
-  entryConc = newEntry()
-  entrySetText(entryConc, "10.000")
-  boxAppend(boxConc, entryConc, 0)
-  cbConcUnit = newCombobox()
-  fillComboBox(cbConcUnit, ConcUnits)
-  comboboxSetSelected(cbConcUnit, 1)
-  boxAppend(boxConc, cbConcUnit, 0)
   btnClear = newButton("Clear")
   btnClear.buttonOnClicked(onBtnClearClicked, nil)
   boxAppend(boxCol1, btnClear, 0)
-
 #--------------------------------------------------------------
   boxCol2 = newVerticalBox()
   boxSetPadded(boxCol2, 1)
   boxAppend(boxColumns, boxCol2, 0)
 
-  boxAppend(boxCol2, newLabel("Weight:"), 0)
+  boxAppend(boxCol2, newLabel(""), 0)
+  cbConcUnit = newCombobox()
+  fillComboBox(cbConcUnit, ConcUnits)
+  comboboxSetSelected(cbConcUnit, 1)
+  boxAppend(boxCol2, cbConcUnit, 0)
+#--------------------------------------------------------------
+  boxColBlank = newVerticalBox()
+  boxSetPadded(boxColBlank, 1)
+  boxAppend(boxColumns, boxColBlank, 0)
 
-  boxWeight = newHorizontalBox()
-  boxSetPadded(boxWeight, 1)
-  boxAppend(boxCol2, boxWeight, 0)
-  entryWeight = newEntry()
-  boxAppend(boxWeight, entryWeight, 0)
-  cbWeightUnit = newCombobox()
-  fillComboBox(cbWeightUnit, WeightUnits)
-  comboboxSetSelected(cbWeightUnit, 1)
-  boxAppend(boxWeight, cbWeightUnit, 0)
+  boxAppend(boxColBlank, newLabel("     "), 0)
+#--------------------------------------------------------------
+  boxCol3 = newVerticalBox()
+  boxSetPadded(boxCol3, 1)
+  boxAppend(boxColumns, boxCol3, 0)
 
-  boxAppend(boxCol2, newLabel("Volume:"), 0)
-  boxVol = newHorizontalBox()
-  boxSetPadded(boxVol, 1)
-  boxAppend(boxCol2, boxVol, 0)
-  entryVol = newEntry()
-  boxAppend(boxVol, entryVol, 0)
-  cbVolUnit = newCombobox()
-  fillComboBox(cbVolUnit, VolumeUnits)
-  comboboxSetSelected(cbVolUnit, 1)
-  boxAppend(boxVol, cbVolUnit, 0)
+  boxAppend(boxCol3, newLabel("pIC50"), 0)
+  entry_pIC50 = newEntry()
+  boxAppend(boxCol3, entry_pIC50, 0)
   btnCalc = newButton("Calc")
   btnCalc.buttonOnClicked(onBtnCalcClicked, nil)
-  boxAppend(boxCol2, btnCalc, 0)
-
+  boxAppend(boxCol3, btnCalc, 0)
+#--------------------------------------------------------------
   boxAppend(boxMain, newLabel(""), 0)
-  boxAppend(boxMain, newLabel("Fill three fields, the fourth will be calculated."), 0)
+  boxAppend(boxMain, newLabel("Fill one field, the other will be calculated."), 0)
   label1 = newLabel("Comma or point may be used for decimal separation.")
   boxAppend(boxMain, label1, 0)
   boxAppend(boxMain, newLabel(""), 0)

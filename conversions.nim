@@ -16,6 +16,14 @@ proc unitToBase*(x: float; unit: enum): float =
 proc baseToUnit*(x: float; unit: enum): float =
   result = x * pow(10.0, 3.0 * unit.ord.float)
 
+proc scaleResult*[T: enum](val: var float; unit: var T, minVal=0.1) =
+  ## If the value is small, readability is increased by using a larger value and a smaller unit.
+  ## This procedure increases the value by order-of-magnitude steps and takes the unit with it.
+  ## Parameters are modified in-place!
+  while val < minVal and unit < unit.high:
+    val *= 1000.0
+    inc unit
+
 proc calcVol*(weight: float; weightUnit: WeightUnits;
               conc: float; concUnit: ConcUnits;
               molWeight: float; resultUnit: VolumeUnits): float =
@@ -42,12 +50,13 @@ proc calcMolwt*(weight: float; weightUnit: WeightUnits;
                 conc: float; concUnit: ConcUnits): float =
   result = unitToBase(weight, weightUnit) / (unitToBase(vol, volUnit) * unitToBase(conc, concUnit))
 
-proc ic50*(pic50: float; concUnit: ConcUnits): float =
+proc calc_IC50*(pic50: float; concUnit: ConcUnits): float =
   ## concUnit is the unit of the result value
   result = baseToUnit(pow(10.0, -pic50), concUnit)
 
-proc pic50*(ic50: float; concUnit: ConcUnits): float =
+proc calc_pIC50*(ic50: float; concUnit: ConcUnits): float =
   result = -log10(unitToBase(ic50, concUnit))
+
 
 when isMainModule:
   # Some tests
@@ -56,6 +65,6 @@ when isMainModule:
   assert calcWeight(1, mL, 10, mM, 500, mg) == 5.0
   assert calcWeight(1, mL, 100, mM, 500, mg) == 50.0
   assert calcConc(5, mg, 1, mL, 500, mM) == 10.0
-  assert ic50(7.0, nM) == 100.0
-  assert ic50(6, uM) == 1.0
-  assert pic50(100, nM) == 7.0
+  assert calc_IC50(7.0, nM) == 100.0
+  assert calc_IC50(6, uM) == 1.0
+  assert calc_pIC50(100, nM) == 7.0
