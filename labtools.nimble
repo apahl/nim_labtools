@@ -8,6 +8,7 @@ license       = "MIT"
 # Dependencies
 
 requires "nim >= 0.14.2"
+requires "strfmt >= 0.8.0"
 
 const
   winFlags = "--os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc --app:gui "

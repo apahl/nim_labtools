@@ -13,6 +13,10 @@ import
   ui,
   conversions
 
+const
+  winSizeX = 470
+  winSizeY = 240
+
 type
   Fields =  enum
     fIC50, fpIC50
@@ -136,7 +140,7 @@ proc main() =
     freeInitError(err)
     return
 
-  mainwin = newWindow("COMAS pIC50 Calculator", 470, 240, 1)
+  mainwin = newWindow("COMAS pIC50 Calculator", winSizeX, winSizeY, 1)
   windowSetMargined(mainwin, 1)
   windowOnClosing(mainwin, onClosing, nil)
   onShouldQuit(shouldQuit, nil)
