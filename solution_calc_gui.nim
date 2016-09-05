@@ -40,10 +40,12 @@ template formatRsltText() =
     rsltText = rsltText.replace(".", ",")
 
 proc `$`(f: Fields): string =
-  const
-    fieldMappings = {fMolWt: "Molwt", fWeight: "Weight", fVol: "Volume", fConc: "Concentration"}.toTable
-
-  result = fieldMappings[f]
+  case f
+    of fMolWt:  "Molwt"
+    of fWeight: "Weight"
+    of fVol:    "Volume"
+    of fConc:   "Concentration"
+    of fNone:   "Nothing"
 
 proc onClosing(w: ptr Window; data: pointer): cint {.cdecl.} =
   controlDestroy(mainwin)

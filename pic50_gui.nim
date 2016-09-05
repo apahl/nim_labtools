@@ -8,7 +8,6 @@ nim --os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x8
 import
   os,
   strutils,
-  # tables,
   strfmt,
   ui,
   conversions
@@ -62,7 +61,7 @@ proc onBtnCalcClicked(b: ptr Button; data: pointer) {.cdecl.} =
     ctext: cstring
     whatToCalc: Fields
     conc: ConcUnits
-    text, rsltText: string
+    text, rsltText, labelText: string
     nbr_IC50, nbr_pIC50, calcValue: float
     numOfFilledFields = 0
     valError = false
@@ -112,19 +111,22 @@ proc onBtnCalcClicked(b: ptr Button; data: pointer) {.cdecl.} =
 
   echo "Field ", whatToCalc, " will be calculated."
   if whatToCalc == fIC50:
+    labelText = "IC50 was calculated."
     conc = comboboxSelected(cbConcUnit).ConcUnits
     calcValue = calc_IC50(nbr_pIC50, conc)
-    scaleResult(calcValue, conc)
+    if scaleResult(calcValue, conc):
+      labelText = labelText & " The unit had to be adapted."
     formatRsltText()
     comboboxSetSelected(cbConcUnit, conc.ord)
     entrySetText(entry_IC50, rsltText)
 
   if whatToCalc == fpIC50:
+    labelText = "pIC50 was calculated."
     calcValue = calc_pIC50(nbr_IC50, comboboxSelected(cbConcUnit).ConcUnits)
     formatRsltText()
     entrySetText(entry_pIC50, rsltText)
 
-  label1.labelSetText($whatToCalc & " was calculated.")
+  label1.labelSetText(labelText)
 
 
 proc main() =

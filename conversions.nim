@@ -16,11 +16,14 @@ proc unitToBase*(x: float; unit: enum): float =
 proc baseToUnit*(x: float; unit: enum): float =
   result = x * pow(10.0, 3.0 * unit.ord.float)
 
-proc scaleResult*[T: enum](val: var float; unit: var T, minVal=0.1) =
+proc scaleResult*[T: enum](val: var float; unit: var T, minVal=0.1): bool =
   ## If the value is small, readability is increased by using a larger value and a smaller unit.
   ## This procedure increases the value by order-of-magnitude steps and takes the unit with it.
   ## Parameters are modified in-place!
+  ## Returns true if the value had to be increased, otherwise false.
+  result = false
   while val < minVal and unit < unit.high:
+    result = true
     val *= 1000.0
     inc unit
 
