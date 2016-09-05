@@ -41,6 +41,11 @@ template formatRsltText() =
   if useComma:
     rsltText = rsltText.replace(".", ",")
 
+proc `$`(f: Fields): string =
+  case f
+    of fIC50:  "IC50"
+    of fpIC50: "pIC50"
+
 proc onClosing(w: ptr Window; data: pointer): cint {.cdecl.} =
   controlDestroy(mainwin)
   ui.quit()
@@ -110,8 +115,8 @@ proc onBtnCalcClicked(b: ptr Button; data: pointer) {.cdecl.} =
     return
 
   echo "Field ", whatToCalc, " will be calculated."
+  labelText = $whatToCalc & " was calculated."
   if whatToCalc == fIC50:
-    labelText = "IC50 was calculated."
     conc = comboboxSelected(cbConcUnit).ConcUnits
     calcValue = calc_IC50(nbr_pIC50, conc)
     if scaleResult(calcValue, conc):
@@ -121,7 +126,6 @@ proc onBtnCalcClicked(b: ptr Button; data: pointer) {.cdecl.} =
     entrySetText(entry_IC50, rsltText)
 
   if whatToCalc == fpIC50:
-    labelText = "pIC50 was calculated."
     calcValue = calc_pIC50(nbr_IC50, comboboxSelected(cbConcUnit).ConcUnits)
     formatRsltText()
     entrySetText(entry_pIC50, rsltText)
