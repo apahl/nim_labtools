@@ -19,7 +19,7 @@ proc readDataFromCSV(fn: string): string =
     elif idx == 3:
       cells = line.split(",")
       barcode = cells[2]
-      if not barcode[0].isAlphaAscii:
+      if barcode.len > 0 and not barcode[0].isAlphaAscii:
         barcode = ""
     elif idx >= 11 and idx <= 26:
       cells = line.split(",")
