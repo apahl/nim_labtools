@@ -1,19 +1,20 @@
 # Package
 
-version       = "0.5.0"
+version       = "0.6.0"
 author        = "Axel Pahl"
-description   = "A set of lab tool programs: csvCombiner, solutionCalculator, pIC50Calculator."
+description   = "A set of lab tool programs: csvCombiner, solutionCalculator, pIC50Calculator, HTRF_ratio."
 license       = "MIT"
 
 # Dependencies
-
-requires "nim >= 0.14.2"
+requires "nim >= 0.15.3"
 requires "strfmt >= 0.8.0"
 
 const
   winFlags = "--os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc --app:gui "
-  srcFiles = ["csv_combine_gui", "solution_calc_gui", "pic50_gui"]  # WITHOUT the .nim extension
-  winBinaries = ["CSVcombiner.exe", "SolutionCalculator.exe", "pIC50Calculator.exe"]  # WITH the .exe extension
+  srcFiles = ["csv_combine_gui", "solution_calc_gui", "pic50_gui",
+              "htrf_ratio_gui"]  # WITHOUT the .nim extension
+  winBinaries = ["CSVcombiner.exe", "SolutionCalculator.exe", "pIC50Calculator.exe",
+                 "HTRF_ratio.exe"]  # WITH the .exe extension
 
 proc buildFiles(srcFiles, binFiles: openarray[string]; flags=""; release=false) =
   var
@@ -45,3 +46,13 @@ task releaseLinux, "build release executables for linux":
 task releaseWin, "build release executables for windows":
   echo("Building release executables for windows...")
   buildFiles(srcFiles, winBinaries, winFlags, release=true)
+
+task buildHTRFratio, "build HTRF_ratio development executable for Linux and Windows":
+  echo("Building HTRF_ratio development executables for Linux and Windows...")
+  buildFiles(srcFiles[3..3], srcFiles[3..3])
+  buildFiles(srcFiles[3..3], winBinaries[3..3], winFlags)
+
+task relHTRFratio, "build HTRF_ratio release executable for Linux and Windows":
+  echo("Building HTRF_ratio release executables for Linux and Windows...")
+  buildFiles(srcFiles[3..3], srcFiles[3..3], release=true)
+  buildFiles(srcFiles[3..3], winBinaries[3..3], winFlags, release=true)

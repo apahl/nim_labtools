@@ -3,7 +3,7 @@ import strutils   # isAlphaAscii, split, join, contains (used by `in`)
 import algorithm  # sort
 import sequtils   # toSeq
 
-proc readDataFromCSV(fn: string): string =
+proc readDataFromCSV(fn: string, htrf=false): string =
   var
     idx = 0
     cells: seq[string]
@@ -36,7 +36,7 @@ proc readDataFromCSV(fn: string): string =
   return result
 
 
-proc combineDataInFolder*(folder: string) =
+proc combineDataInFolder*(folder: string, htrf=false): int =
   ## Combines the data from all csv files in the folder
   ## and writes the combined results into combined.csv
 
@@ -46,14 +46,17 @@ proc combineDataInFolder*(folder: string) =
   var
     file = open(outPath, fmWrite)
     csv_files = toSeq(os.walkFiles(mask))
+    numOfFiles = 0
   csv_files.sort(system.cmp)
   for fn in csv_files:
     if "combined" in fn: continue
-    var data = readDataFromCSV(fn)
+    var data = readDataFromCSV(fn, htrf=htrf)
     file.write(data)
     file.write("\n\n")
+    numOfFiles += 1
 
   file.close()
+  return numOfFiles
 
 
 when isMainModule:
