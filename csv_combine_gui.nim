@@ -5,13 +5,21 @@
 import
   os,
   ui,
-  csv_combine
+  csv_combine,
+  screeningTypes
+
+const
+  lbl1Default = "Select Technology, choose directory with"
+  lbl2Default = " Envision result files, then press Start!"
 
 var
   mainwin: ptr Window
+  cbTechnology: ptr Combobox
+  btnStart: ptr Button
   label1: ptr Label
   label2: ptr Label
-  filename: string
+  filename: string = ""
+  technology: ReadOut
 
 proc onClosing(w: ptr Window; data: pointer): cint {.cdecl.} =
   controlDestroy(mainwin)
@@ -22,6 +30,17 @@ proc shouldQuit(data: pointer): cint {.cdecl.} =
   controlDestroy(mainwin)
   return 1
 
+template enableStart() =
+  if technology != roNone and filename != "":
+    label1.labelSetText("Ready to combine files.")
+    label2.labelSetText("Press Start!")
+    controlEnable(btnStart)
+
+proc onCbTechnologyChanged(cb: ptr Combobox; data: pointer) {.cdecl.} =
+  let idx = comboBoxSelected(cb)
+  technology = ReadOut(idx)
+  enableStart()
+
 proc onBtnOpenClicked(b: ptr Button; data: pointer) {.cdecl.} =
   var fn = ui.openFile(mainwin)
   if fn == nil:
@@ -29,16 +48,20 @@ proc onBtnOpenClicked(b: ptr Button; data: pointer) {.cdecl.} =
     return
   else:
     filename = $fn
-    label1.labelSetText("Ready to combine files.")
-    label2.labelSetText("Press Start!")
+    enableStart()
     freeText(fn)
 
 proc onBtnStartClicked(b: ptr Button; data: pointer) {.cdecl.} =
-  if filename != "":
+  if filename != "" and technology != roNone:
     let dir = parentDir(filename)
-    let numOfFiles = combineDataInFolder(dir)
-    label1.labelSetText($numOfFiles & " Files were combined. Done.")
-    label2.labelSetText("")
+    try:
+      let numOfFiles = combineDataInFolder(dir, technology==roHTRF)
+      label1.labelSetText($technology & " mode was used.")
+      label2.labelSetText($numOfFiles & " Files were combined. Done.")
+    except FileFormatError, IOError:
+      label1.labelSetText(lbl1Default)
+      label2.labelSetText(lbl2Default)
+      msgBoxError(mainwin, "", getCurrentExceptionMsg())
 
 
 proc main() =
@@ -47,7 +70,6 @@ proc main() =
     err: cstring
     box: ptr Box
     btnOpen: ptr Button
-    btnStart: ptr Button
 
   err = ui.init(addr(o))
   if err != nil:
@@ -62,14 +84,22 @@ proc main() =
   box = newVerticalBox()
   boxSetPadded(box, 1)
   windowSetChild(mainwin, box)
+  cbTechnology = newCombobox()
+  comboBoxAppend(cbTechnology, "Choose Technology...")
+  comboBoxAppend(cbTechnology, $roAlpha)
+  comboBoxAppend(cbTechnology, $roHTRF)
+  comboboxSetSelected(cbTechnology, 0)
+  boxAppend(box, cbTechnology, 0)
+  comboboxOnSelected(cbTechnology, onCbTechnologyChanged, nil)
   btnOpen = newButton("Choose Dir...")
   btnOpen.buttonOnClicked(onBtnOpenClicked, nil)
   boxAppend(box, btnOpen, 0)
   btnStart = newButton("Start!")
   btnStart.buttonOnClicked(onBtnStartClicked, nil)
+  controlDisable(btnStart)
   boxAppend(box, btnStart, 0)
-  label1 = newLabel("Choose directory with Envision files,")
-  label2 = newLabel("then press Start!")
+  label1 = newLabel(lbl1Default)
+  label2 = newLabel(lbl2Default)
   boxAppend(box, label1, 0)
   boxAppend(box, label2, 0)
   boxAppend(box, newLabel(""), 0)
