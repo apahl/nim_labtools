@@ -10,15 +10,19 @@ type
   Channel = seq[seq[string]]
 
 proc removeEmpty(cells: var seq[string]) =
-  ## Remove cells that are empty or only contain whitespace from the right end
+  ## Remove cells that are empty or only contain whitespace from the right end.
+  ## When all elements are empty, an empty list results.
   var
     last = cells.len - 1
     foundEmptyCells = false
-  while cells[last].isNilOrWhitespace:
+  while last >= 0 and cells[last].isNilOrWhitespace:
     foundEmptyCells = true
     last -= 1
   if foundEmptyCells:
-    cells = cells[0..last]
+    if last >= 0:
+      cells = cells[0..last]
+    else:
+      cells = @[]
 
 proc serialize(channel: Channel): seq[string] =
   result = @[]
