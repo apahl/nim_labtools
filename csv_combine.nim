@@ -12,7 +12,7 @@ type
 proc removeEmpty(cells: var seq[string]) =
   ## Remove cells that are empty or only contain whitespace from the right end
   while cells.len > 0 and cells[^1].isNilOrWhitespace:
-    discard cells.pop()
+    cells.setLen(cells.len-1)
 
 proc serialize(channel: Channel): seq[string] =
   result = @[]
