@@ -10,8 +10,9 @@ requires "nim >= 0.15.3"
 requires "strfmt >= 0.8.0"
 
 const
-  winFlags = "--os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc --app:gui "
-  srcFiles = ["csv_combine_gui", "solution_calc_gui", "pic50_gui",
+  projectName = "labtools"
+  winFlags    = "--os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc --app:gui "
+  srcFiles    = ["csv_combine_gui", "solution_calc_gui", "pic50_gui",
               "generate_qsub_batch"]  # WITHOUT the .nim extension
   winBinaries = ["CSVcombiner.exe", "SolutionCalculator.exe", "pIC50Calculator.exe",
                  "GenerateQsubBatch"]  # WITH the .exe extension
@@ -28,7 +29,7 @@ proc buildFiles(srcFiles, binFiles: openarray[string]; flags=""; release=false) 
     flags.add(" ")
 
   for i in 0 .. <srcFiles.len:
-    let buildCmd = "nim " & flags & releaseFlag & "-o:bin/" & binFiles[i] & " c labtools/" & srcFiles[i] & ".nim"
+    let buildCmd = "nim " & flags & releaseFlag & "-o:bin/" & binFiles[i] & " c " & projectName & "/" & srcFiles[i] & ".nim"
     exec buildCmd
 
 task buildLinux, "build development executables for linux":
