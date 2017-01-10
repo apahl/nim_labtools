@@ -28,7 +28,7 @@ proc buildFiles(srcFiles, binFiles: openarray[string]; flags=""; release=false) 
     flags.add(" ")
 
   for i in 0 .. <srcFiles.len:
-    let buildCmd = "nim " & flags & releaseFlag & "-o:bin/" & binFiles[i] & " c " & srcFiles[i] & ".nim"
+    let buildCmd = "nim " & flags & releaseFlag & "-o:bin/" & binFiles[i] & " c labtools/" & srcFiles[i] & ".nim"
     exec buildCmd
 
 task buildLinux, "build development executables for linux":
