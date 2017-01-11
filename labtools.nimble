@@ -8,14 +8,15 @@ license       = "MIT"
 # Dependencies
 requires "nim >= 0.15.3"
 requires "strfmt >= 0.8.0"
+requires "https://github.com/apahl/csvtable.git >= 0.1.1"
 
 const
   projectName = "labtools"
   winFlags    = "--os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc --app:gui "
   srcFiles    = ["csv_combine_gui", "solution_calc_gui", "pic50_gui",
-              "generate_qsub_batch"]  # WITHOUT the .nim extension
+              "generate_qsub_batch", "concat_cp_results"]  # WITHOUT the .nim extension
   winBinaries = ["CSVcombiner.exe", "SolutionCalculator.exe", "pIC50Calculator.exe",
-                 "GenerateQsubBatch"]  # WITH the .exe extension
+                 "GenerateQsubBatch.exe", "ConcatCPResults.exe"]  # WITH the .exe extension
 
 proc buildFiles(srcFiles, binFiles: openarray[string]; flags=""; release=false) =
   var
@@ -31,6 +32,11 @@ proc buildFiles(srcFiles, binFiles: openarray[string]; flags=""; release=false) 
   for i in 0 .. <srcFiles.len:
     let buildCmd = "nim " & flags & releaseFlag & "-o:bin/" & binFiles[i] & " c " & projectName & "/" & srcFiles[i] & ".nim"
     exec buildCmd
+
+task info, "detailed package info":
+  echo "Do *NOT* use `nimble install` with this package."
+  echo "Use the individual tasks listed below instead."
+  echo "Package dependencies: strfmt, https://github.com/apahl/csvtable.git"
 
 task buildLinux, "build development executables for linux":
   echo("Building development executables for linux...")
@@ -66,4 +72,14 @@ task buildQsubBatch, "build generate_qsub_batch development executable for Linux
 task relQSubBatch, "build generate_qsub_batch release executable for Linux":
   echo("Building generate_qsub_batch release executable for Linux...")
   buildFiles(srcFiles[3..3], srcFiles[3..3], release=true)
+  # buildFiles(srcFiles[3..3], winBinaries[3..3], winFlags, release=true)
+
+task buildConcatCPResults, "build concat_cp_results development executable for Linux":
+  echo("Building concat_cp_results development executable for Linux...")
+  buildFiles(srcFiles[4..4], srcFiles[4..4])
+  # buildFiles(srcFiles[3..3], winBinaries[3..3], winFlags)
+
+task relConcatCPResults, "build concat_cp_results release executable for Linux":
+  echo("Building concat_cp_results release executable for Linux...")
+  buildFiles(srcFiles[4..4], srcFiles[4..4], release=true)
   # buildFiles(srcFiles[3..3], winBinaries[3..3], winFlags, release=true)
