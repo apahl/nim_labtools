@@ -80,9 +80,9 @@ proc readDataFromCSV(fn: string, htrf=false): string =
         channel2.add(row)
 
   # data sanity checks
-  if maxRow[0] != maxRow[1]:
+  if htrf and maxRow[0] != maxRow[1]:
     raise newException(FileFormatError, "FileFormatError: different row lengths maxRow[0] != maxRow[1] (" & $maxRow[0] & " != " & $maxRow[1] & ")")
-  if maxCol[0] != maxCol[1]:
+  if htrf and maxCol[0] != maxCol[1]:
     raise newException(FileFormatError, "FileFormatError: different column lengths maxCol[0] != maxCol[1] (" & $maxCol[0] & " != " & $maxCol[1] & ")")
   if maxRow[0] == numRows[pf384] and maxCol[0] == numCols[pf384]:
     plateFormat = pf384
