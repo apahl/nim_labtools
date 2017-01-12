@@ -1,12 +1,14 @@
-import os         # `/`
-import strutils   # isAlphaAscii, parseFloat, split, join, contains (used by `in`)
-import algorithm  # sort
-import sequtils   # toSeq
+import os,         # `/`
+       strutils,   # isDigit, parseInt
+       algorithm,  # sort
+       sequtils,   # toSeq
+       tables
 
-import csvtable
-
+import csvtable # https://github.com/apahl/csvtable
+# Metadata_Plate,Metadata_Site,Metadata_Well
 const
-  cpFileNames = ["Cells.csv", "Cytoplasm.csv", "Image.csv", "Nuclei.csv"]
+  # Image.csv has to be the first file in the list, because it contains the Well metadata
+  cpFileNames = ["Image.csv", "Cells.csv", "Cytoplasm.csv", "Nuclei.csv"]
 
 proc echoHelp =
   echo "\nConcatenate all CellProfiler result files."
@@ -19,9 +21,13 @@ proc concat_cp_folder*(folder: string): int =
   ## that are located in the numbered subdirs.
   ## Returns the number of combined folders.
   var
+    wellTable      = newTable[int, string]()
+    plateId: string
     firstIteration = true
-    firstFolder = true
-    numOfDirs = 0
+    firstFolder    = true
+    firstImageFile = true
+    numOfDirs      = 0
+
   for cpFileName in cpFileNames:
     echo "\nConcatenating ", cpFileName, "..."
     stdout.write "    "
@@ -31,15 +37,30 @@ proc concat_cp_folder*(folder: string): int =
         stdout.write "."
         stdout.flushFile
         var cpResultFile: CSVTblReader
-        let headers = cpResultFile.open(folder / path / cpFileName, sep=',')
+        var headers = cpResultFile.open(folder / path / cpFileName, sep=',')
         if not outFile.isOpen:
+          if not(cpFileName == "Image.csv"):  # the other files will have these two columns added
+            headers.add("Metadata_Plate")
+            headers.add("Metadata_Well")
           outFile.open(folder / cpFileName, headers, sep=',')
         if firstFolder:
           firstFolder = false
           os.copyFile(folder / path / "Experiment.csv", folder / "Experiment.csv")
         if firstIteration:
           numOfDirs += 1
-        for line in cpResultFile:
+        for ln in cpResultFile.items:
+          var line: Table[string, string]
+          shallowcopy(line, ln)
+          if cpFileName == "Image.csv":
+            if firstImageFile:
+              firstImageFile = false
+              plateId = line["Metadata_Plate"]
+            let imageNumber = line["ImageNumber"].parseInt
+            wellTable[imageNumber] = line["Metadata_Well"]
+          else:  # write well metadata into the other files
+            let imageNumber = line["ImageNumber"].parseInt
+            line["Metadata_Plate"] = plateId
+            line["Metadata_Well"] = wellTable[imageNumber]
           outFile.writeRow(line)
     outFile.close
     echo ""
