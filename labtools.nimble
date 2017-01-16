@@ -14,9 +14,9 @@ const
   projectName = "labtools"
   winFlags    = "--os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc --app:gui "
   srcFiles    = ["csv_combine_gui", "solution_calc_gui", "pic50_gui",
-              "generate_qsub_batch", "concat_cp_results"]  # WITHOUT the .nim extension
+              "generate_qsub_batch", "concat_cp_results", "transpose_table"]  # WITHOUT the .nim extension
   winBinaries = ["CSVcombiner.exe", "SolutionCalculator.exe", "pIC50Calculator.exe",
-                 "GenerateQsubBatch.exe", "ConcatCPResults.exe"]  # WITH the .exe extension
+                 "GenerateQsubBatch.exe", "ConcatCPResults.exe", "TranposeTable"]  # WITH the .exe extension
 
 proc buildFiles(srcFiles, binFiles: openarray[string]; flags=""; release=false) =
   var
@@ -83,3 +83,13 @@ task relConcatCPResults, "build concat_cp_results release executable for Linux":
   echo("Building concat_cp_results release executable for Linux...")
   buildFiles(srcFiles[4..4], srcFiles[4..4], release=true)
   # buildFiles(srcFiles[3..3], winBinaries[3..3], winFlags, release=true)
+
+task buildTransposeTable, "build transpose_table development executable for Linux":
+  echo("Building transpose_table development executable for Linux...")
+  buildFiles(srcFiles[5..5], srcFiles[5..5])
+  # buildFiles(srcFiles[5..5], winBinaries[5..5], winFlags)
+
+task relTransposeTable, "build transpose_table release executable for Linux":
+  echo("Building transpose_table release executable for Linux...")
+  buildFiles(srcFiles[5..5], srcFiles[5..5], release=true)
+  # buildFiles(srcFiles[5..5], winBinaries[5..5], winFlags, release=true)
