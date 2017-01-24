@@ -14,9 +14,11 @@ const
   projectName = "labtools"
   winFlags    = "--os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc --app:gui "
   srcFiles    = ["csv_combine_gui", "solution_calc_gui", "pic50_gui",
-              "generate_qsub_batch", "concat_cp_results", "transpose_table"]  # WITHOUT the .nim extension
+                 "generate_qsub_batch", "concat_cp_results", "transpose_table",
+                 "get_layout", "get_layout_gui"]  # WITHOUT the .nim extension
   winBinaries = ["CSVcombiner.exe", "SolutionCalculator.exe", "pIC50Calculator.exe",
-                 "GenerateQsubBatch.exe", "ConcatCPResults.exe", "TranposeTable"]  # WITH the .exe extension
+                 "generateQsubBatch.exe", "ConcatCPResults.exe", "TranposeTable.exe",
+                 "", "getLayout.exe"]  # WITH the .exe extension
 
 proc buildFiles(srcFiles, binFiles: openarray[string]; flags=""; release=false) =
   var
@@ -30,8 +32,9 @@ proc buildFiles(srcFiles, binFiles: openarray[string]; flags=""; release=false) 
     flags.add(" ")
 
   for i in 0 .. <srcFiles.len:
-    let buildCmd = "nim " & flags & releaseFlag & "-o:bin/" & binFiles[i] & " c " & projectName & "/" & srcFiles[i] & ".nim"
-    exec buildCmd
+    if binFiles[i] != "":  # only build the GUI tools for Windows, not the cmdline versions
+      let buildCmd = "nim " & flags & releaseFlag & "-o:bin/" & binFiles[i] & " c " & projectName & "/" & srcFiles[i] & ".nim"
+      exec buildCmd
 
 task info, "detailed package info":
   echo "Do *NOT* use `nimble install` with this package."
@@ -93,3 +96,15 @@ task relTransposeTable, "build transpose_table release executable for Linux":
   echo("Building transpose_table release executable for Linux...")
   buildFiles(srcFiles[5..5], srcFiles[5..5], release=true)
   # buildFiles(srcFiles[5..5], winBinaries[5..5], winFlags, release=true)
+
+task buildGetLayout, "build get_layout development executable for Linux":
+  echo("Building get_layout development executables for Linux...")
+  buildFiles(srcFiles[6..6], srcFiles[6..6])
+  buildFiles(srcFiles[7..7], srcFiles[7..7])
+  # buildFiles(srcFiles[6..6], winBinaries[6..6], winFlags)
+
+task relGetLayout, "build get_layout release executable for Linux":
+  echo("Building get_layout release executable for Linux...")
+  buildFiles(srcFiles[6..6], srcFiles[6..6], release=true)
+  buildFiles(srcFiles[7..7], srcFiles[7..7], release=true)
+  # buildFiles(srcFiles[6..6], winBinaries[6..6], winFlags, release=true)

@@ -76,6 +76,10 @@ proc concat_cp_folder*(folder: string): int =
             let imageNumber = line["ImageNumber"].parseInt
             wellTable[imageNumber] = line["Metadata_Well"]
           else:  # write well metadata into the other files
+            # replace "nan"s
+            for k in line.keys:
+              if line[k] == "nan":
+                line[k] = ""
             let imageNumber = line["ImageNumber"].parseInt
             let well = wellTable[imageNumber]
             let expWell = expandWell(well)
