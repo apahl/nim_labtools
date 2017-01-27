@@ -73,7 +73,7 @@ proc concat_cp_folder*(folder: string): int =
   var
     firstFolder    = true
     resultFile: CSVTblWriter
-    resultHeaders = @["Metadata_Plate", "Metadata_Well", "plateColumn", "plateRow", "ImageNumber"]
+    resultHeaders = @["Metadata_Plate", "Metadata_Well", "plateColumn", "plateRow"]
 
   echo "Concatenating folders..."
   stdout.flushFile
@@ -117,7 +117,6 @@ proc concat_cp_folder*(folder: string): int =
         resRow["Metadata_Well"] = well
         resRow["plateColumn"] = $platePos.column
         resRow["plateRow"] = $platePos.row
-        resRow["ImageNumber"] = $imageNumber
 
         for h in inpRow.keys:
           if h notin excludeHeaders:
