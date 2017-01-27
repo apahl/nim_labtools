@@ -10,7 +10,8 @@ const
   rows = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P",
           "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "AA", "AB", "AC", "AD", "AE", "AF"]
   excludeHeaders = ["Object", "Location", "Orientation", "Edge", "Zernike",
-                    "_X", "_Y", "ImageNumber"]
+                    "_X", "_Y", "ImageNumber", "Parent_Nuclei", "Euler", "Parent_Cells",
+                    "Parent_Nuclei"]
 
 proc echoHelp =
   echo "\nConcatenate all CellProfiler result files."
