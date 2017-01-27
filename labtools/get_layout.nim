@@ -48,7 +48,7 @@ proc formatWell(well: string): string =
 
 proc write(layout: Layout, fn="layout.csv") =
   var layoutFile = open(fn, fmWrite)
-  layoutFile.writeLine("Batch_Id,Well")
+  layoutFile.writeLine("Batch_Id,WellType,Well")
   for well, cpdId in layout:
     layoutFile.writeLine($cpdId & "," & well)
 
@@ -83,9 +83,9 @@ proc genLayout(plateDelivFn, echoReportFn: string): Layout =
           if destWell in result:
             raise newException(ValueError, "destWell " & destWell & " already present in result.")
           if cpd == "":
-            result[destWell] = "DMSO"
+            result[destWell] = "DMSO,Control"
           else:
-            result[destWell] = delivLayout[srcWell]
+            result[destWell] = delivLayout[srcWell] & ",Compound"
 
 
 when isMainModule:
