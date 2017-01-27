@@ -1,7 +1,6 @@
 import os,         # `/`
-       strutils,   # isDigit, parseInt
+       strutils,   # isDigit, parseInt, find
        algorithm,  # sort
-       sequtils,   # toSeq
        tables
 
 import csvtable # https://github.com/apahl/csvtable
