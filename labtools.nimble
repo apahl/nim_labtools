@@ -97,14 +97,14 @@ task relTransposeTable, "build transpose_table release executable for Linux":
   buildFiles(srcFiles[5..5], srcFiles[5..5], release=true)
   # buildFiles(srcFiles[5..5], winBinaries[5..5], winFlags, release=true)
 
-task buildGetLayout, "build get_layout development executable for Linux":
-  echo("Building get_layout development executables for Linux...")
+task buildGetLayout, "build get_layout development executable for Linux and Windows":
+  echo("Building get_layout development executables for Linux and Windows...")
   buildFiles(srcFiles[6..6], srcFiles[6..6])
   buildFiles(srcFiles[7..7], srcFiles[7..7])
-  # buildFiles(srcFiles[6..6], winBinaries[6..6], winFlags)
+  buildFiles(srcFiles[7..7], winBinaries[7..7], winFlags)
 
-task relGetLayout, "build get_layout release executable for Linux":
-  echo("Building get_layout release executable for Linux...")
+task relGetLayout, "build get_layout release executable for Linux and Windows":
+  echo("Building get_layout release executable for Linux and Windows...")
   buildFiles(srcFiles[6..6], srcFiles[6..6], release=true)
   buildFiles(srcFiles[7..7], srcFiles[7..7], release=true)
-  # buildFiles(srcFiles[6..6], winBinaries[6..6], winFlags, release=true)
+  buildFiles(srcFiles[7..7], winBinaries[7..7], winFlags, release=true)
