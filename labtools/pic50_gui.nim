@@ -9,7 +9,7 @@ import
   os,
   strutils,
   strfmt,
-  ui/rawui,
+  ui,
   conversions
 
 const
@@ -48,7 +48,7 @@ proc `$`(f: Fields): string =
 
 proc onClosing(w: ptr Window; data: pointer): cint {.cdecl.} =
   controlDestroy(mainwin)
-  rawui.quit()
+  ui.quit()
   return 0
 
 proc shouldQuit(data: pointer): cint {.cdecl.} =
@@ -135,12 +135,12 @@ proc onBtnCalcClicked(b: ptr Button; data: pointer) {.cdecl.} =
 
 proc main() =
   var
-    o: rawui.InitOptions
+    o: ui.InitOptions
     err: cstring
     boxMain, boxColumns, boxCol1, boxCol2, boxCol3, boxColBlank: ptr Box
     btnCalc, btnClear: ptr Button
 
-  err = rawui.init(addr(o))
+  err = ui.init(addr(o))
   if err != nil:
     echo "error initializing ui: ", err
     freeInitError(err)
@@ -206,7 +206,7 @@ proc main() =
   boxAppend(boxMain, newLabel("(c) 2016 COMAS"), 0)
 
   controlShow(mainwin)
-  rawui.main()
-  rawui.uninit()
+  ui.main()
+  ui.uninit()
 
 main()

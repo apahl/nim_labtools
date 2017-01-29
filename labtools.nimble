@@ -25,6 +25,8 @@ proc buildFiles(srcFiles, binFiles: openarray[string]; flags=""; release=false) 
     flags = flags
     releaseFlag = ""
 
+  flags.add("-d:useLibUiDll")
+
   if release:
     releaseFlag = "--verbosity:0 -d:release "
 
