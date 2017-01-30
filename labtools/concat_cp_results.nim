@@ -18,7 +18,7 @@ import csvtable # https://github.com/apahl/csvtable
 const
   rows = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P",
           "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "AA", "AB", "AC", "AD", "AE", "AF"]
-  inclHeaders = ["Name", "ImageNumber", "Metadata_Plate", "Metadata_Site", "Metadata_Well",
+  inclHeaders = ["CellOutlines", "ImageNumber", "Metadata_Plate", "Metadata_Site", "Metadata_Well",
                  "Count_Cells", "Count_Cytoplasm", "Count_Nuclei"]
   exclHeaders = ["Object", "Location", "Orientation", "Edge", "Zernike",
                  "_X", "_Y", "ImageNumber", "Parent_Nuclei", "Euler", "Parent_Cells",
@@ -63,19 +63,17 @@ proc expandWell(well: string): tuple[row: int, column: int] =
 proc selectHeaders(headers: seq[string]): seq[string] =
   ## include and exclude certain headers,
   ## returns a new sequence with the desired headers
-  var
-    keep: bool
   result = @[]
   for hd in headers:
-    keep = false
+    var keep = false
     for ihd in inclHeaders:
-      if hd.find(ihd) > 0:
+      if hd.find(ihd) >= 0:
         keep = true  # keep in any case
         break
       if hd.startsWith("Median_"):
         keep = true  # keep maybe...,
         for ehd in exclHeaders:
-          if hd.find(ehd) > 0:  # ...if not in the exclHeaders list
+          if hd.find(ehd) >= 0:  # ...if not in the exclHeaders list
             keep = false
             break
     if keep:
