@@ -14,7 +14,7 @@ proc usage():string =
 
 proc writeBatchQueue(numJobsCirca=100) =
   var
-    imagesPerSlice = numImages div numJobsCirca + 1
+    imagesPerSlice = numImages div numJobsCirca
     numJobsActual = numImages div imagesPerSlice
     jobNoLoop: int
 
