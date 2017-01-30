@@ -11,7 +11,7 @@ import
   strutils,
   tables,
   strfmt,
-  ui,
+  rawui,
   conversions
 
 type
@@ -49,7 +49,7 @@ proc `$`(f: Fields): string =
 
 proc onClosing(w: ptr Window; data: pointer): cint {.cdecl.} =
   controlDestroy(mainwin)
-  ui.quit()
+  rawui.quit()
   return 0
 
 proc shouldQuit(data: pointer): cint {.cdecl.} =
@@ -183,13 +183,13 @@ proc onBtnCalcClicked(b: ptr Button; data: pointer) {.cdecl.} =
 
 proc main() =
   var
-    o: ui.InitOptions
+    o: rawui.InitOptions
     err: cstring
     boxMain, boxColumns, boxCol1, boxCol2: ptr Box
     boxWeight, boxMolwt, boxConc, boxVol: ptr Box
     btnCalc, btnClear: ptr Button
 
-  err = ui.init(addr(o))
+  err = rawui.init(addr(o))
   if err != nil:
     echo "error initializing ui: ", err
     freeInitError(err)
@@ -273,7 +273,7 @@ proc main() =
   boxAppend(boxMain, newLabel("(c) 2016 COMAS"), 0)
 
   controlShow(mainwin)
-  ui.main()
-  ui.uninit()
+  rawui.main()
+  rawui.uninit()
 
 main()

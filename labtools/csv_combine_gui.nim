@@ -4,7 +4,7 @@
 
 import
   os,
-  ui,
+  rawui,
   csv_combine,
   screeningTypes
 
@@ -23,7 +23,7 @@ var
 
 proc onClosing(w: ptr Window; data: pointer): cint {.cdecl.} =
   controlDestroy(mainwin)
-  ui.quit()
+  rawui.quit()
   return 0
 
 proc shouldQuit(data: pointer): cint {.cdecl.} =
@@ -42,7 +42,7 @@ proc onCbTechnologyChanged(cb: ptr Combobox; data: pointer) {.cdecl.} =
   enableStart()
 
 proc onBtnOpenClicked(b: ptr Button; data: pointer) {.cdecl.} =
-  var fn = ui.openFile(mainwin)
+  var fn = rawui.openFile(mainwin)
   if fn == nil:
     filename = ""
     return
@@ -66,12 +66,12 @@ proc onBtnStartClicked(b: ptr Button; data: pointer) {.cdecl.} =
 
 proc main() =
   var
-    o: ui.InitOptions
+    o: rawui.InitOptions
     err: cstring
     box: ptr Box
     btnOpen: ptr Button
 
-  err = ui.init(addr(o))
+  err = rawui.init(addr(o))
   if err != nil:
     echo "error initializing ui: ", err
     freeInitError(err)
@@ -105,7 +105,7 @@ proc main() =
   boxAppend(box, newLabel(""), 0)
   boxAppend(box, newLabel("(c) 2016 COMAS"), 0)
   controlShow(mainwin)
-  ui.main()
-  ui.uninit()
+  rawui.main()
+  rawui.uninit()
 
 main()
