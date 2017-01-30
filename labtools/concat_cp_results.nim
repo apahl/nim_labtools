@@ -1,3 +1,13 @@
+## This is the simplified version that only concatenates
+## the `Image.csv` files which contain the Median values per image
+## APL, 30-Jan-2017
+# Include:
+# Metadata_Plate,Metadata_Site,Metadata_Well,
+# Count_Cells,Count_Cytoplasm,Count_Nuclei,
+# *Name*
+
+# Exclude:
+# Location,Orientation,Edge
 import os,         # `/`
        strutils,   # isDigit, parseInt, find
        algorithm,  # sort
@@ -8,24 +18,22 @@ import csvtable # https://github.com/apahl/csvtable
 const
   rows = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P",
           "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "AA", "AB", "AC", "AD", "AE", "AF"]
-  excludeHeaders = ["Object", "Location", "Orientation", "Edge", "Zernike",
-                    "_X", "_Y", "ImageNumber", "Parent_Nuclei", "Euler", "Parent_Cells",
-                    "Parent_Nuclei"]
+  inclHeaders = ["Name", "ImageNumber", "Metadata_Plate", "Metadata_Site", "Metadata_Well",
+                 "Count_Cells", "Count_Cytoplasm", "Count_Nuclei"]
+  exclHeaders = ["Object", "Location", "Orientation", "Edge", "Zernike",
+                 "_X", "_Y", "ImageNumber", "Parent_Nuclei", "Euler", "Parent_Cells",
+                 "Intensity","Parent_Nuclei"]
 
 proc echoHelp =
-  echo "\nConcatenate all CellProfiler result files."
+  echo "\nConcatenate all CellProfiler `Image.csv` result files."
   echo "Usage: concat_cp_results <folder>"
-  echo "<folder>: directory which contains the numerical subdirs that contain the CP result files."
+  echo "<folder>: directory which contains the numerical subdirs that contain"
+  echo "          the CP `Image.csv` result files."
   quit(0)
 
 template directWrite(s: string): untyped =
   stdout.write s
   stdout.flushFile
-
-proc showProgress(ctr: int) =
-  const progress = [".", "o", "O", "O", "o", "."]
-  let idx = ctr mod progress.len
-  directWrite "\b" & progress[idx]
 
 proc formatWell(well: string): string =
   ## reformat "A1" to "A01", etc., if necessary
@@ -52,95 +60,65 @@ proc expandWell(well: string): tuple[row: int, column: int] =
   result.row = idx + 1
   result.column = well[^2..^1].parseInt
 
-proc addHeaders(s: var seq[string], headers: var seq[string], prefix: string) =
-  ## prepare one total header with the prefix from the single files
-  ## and exclude the headers that are in `excludeHeaders`
-  var hdHigh = headers.high
-  for idx in countdown(hdHigh, 0):
-    var pos: int
-    for excl in excludeHeaders:
-      pos = headers[idx].find(excl)
-      if pos >= 0:
-        headers.delete(idx)
+proc selectHeaders(headers: seq[string]): seq[string] =
+  ## include and exclude certain headers,
+  ## returns a new sequence with the desired headers
+  var
+    keep: bool
+  result = @[]
+  for hd in headers:
+    keep = false
+    for ihd in inclHeaders:
+      if hd.find(ihd) > 0:
+        keep = true  # keep in any case
         break
-    if pos < 0:
-      s.add(prefix & headers[idx])
+      if hd.startsWith("Median_"):
+        keep = true  # keep maybe...,
+        for ehd in exclHeaders:
+          if hd.find(ehd) > 0:  # ...if not in the exclHeaders list
+            keep = false
+            break
+    if keep:
+      result.add(hd)
 
 proc concat_cp_folder*(folder: string): int =
-  ## Concatenates all CellProfiler result files
+  ## Concatenates all `Image.csv` result files
   ## that are located in the numbered subdirs.
   ## Returns the number of combined folders.
   var
     firstFolder    = true
     resultFile: CSVTblWriter
-    resultHeaders = @["Metadata_Plate", "Metadata_Well", "plateColumn", "plateRow"]
+    resultHeaders: seq[string]
 
   echo "Concatenating folders..."
   stdout.flushFile
   for kind, path in os.walkDir(folder, relative=true):
     if kind == pcDir and path[0].isDigit and os.fileExists(folder / path / "Image.csv"):
       var
-        imgFile, cellsFile, cytFile, nuclFile: CSVTblReader
-        cellsHeaders = cellsFile.open(folder / path / "Cells.csv", sep=',')
-        cytHeaders   = cytFile.open(folder / path / "Cytoplasm.csv", sep=',')
-        nuclHeaders  = nuclFile.open(folder / path / "Nuclei.csv", sep=',')
-        wellTbl      = newTable[int, string]()
-        plateIdTbl   = newTable[int, string]()
-      discard imgFile.open(folder / path / "Image.csv", sep=',')  # the image headers are not needed
-      directWrite "."
+        imgFile: CSVTblReader
+        imgHeaders = imgFile.open(folder / path / "Image.csv", sep=',')
       if firstFolder:
         firstFolder = false
-        resultHeaders.addHeaders(cellsHeaders, "Cells_")
-        resultHeaders.addHeaders(cytHeaders, "Cyt_")
-        resultHeaders.addHeaders(nuclHeaders, "Nucl_")
+        resultHeaders = selectHeaders(imgHeaders)
+        resultHeaders.add("plateColumn")
+        resultHeaders.add("plateRow")
         resultFile.open(folder / "Results.csv", resultHeaders, sep=',')
       result += 1
-    # read in plate and well information per imagenumber
-      for line in imgFile:
-        let imageNumber = line["ImageNumber"].parseInt
-        plateIdTbl[imagenumber] = line["Metadata_Plate"]
-        wellTbl[imageNumber] = line["Metadata_Well"]
-      var
-        inpRow = cellsFile.next()
-        lineCtr = 0
-      while inpRow.len > 0:
-        var
-          resRow = newTable[string, string]()
-          imageNumber = inpRow["ImageNumber"].parseInt
-          plateId = plateIdTbl[imageNumber]
-          well = wellTbl[imageNumber]
-          platePos = expandWell(well)
-        lineCtr += 1
-        if lineCtr mod 200 == 0:
-          showProgress(lineCtr div 200)
-        resRow["Metadata_Plate"] = plateId
-        resRow["Metadata_Well"] = well
-        resRow["plateColumn"] = $platePos.column
-        resRow["plateRow"] = $platePos.row
-
-        for h in inpRow.keys:
-          if h notin excludeHeaders:
-            resRow["Cells_" & h] = inpRow[h]
-
-        inpRow = cytFile.next()
-        if inpRow["ImageNumber"].parseInt != imageNumber:
-          raise(newException(ValueError, "Imagenumber does not match in " & folder / path / "Cytoplasm.csv"))
-        for h in inpRow.keys:
-          if h notin excludeHeaders:
-            resRow["Cyt_" & h] = inpRow[h]
-
-        inpRow = nuclFile.next()
-        if inpRow["ImageNumber"].parseInt != imageNumber:
-          raise(newException(ValueError, "Imagenumber does not match in " & folder / path / "Nuclei.csv"))
-        for h in inpRow.keys:
-          if h notin excludeHeaders:
-            resRow["Nucl_" & h] = inpRow[h]
-
-        resultFile.writeRow(resRow)
-        inpRow = cellsFile.next()
-      directWrite "\b*"
+      directWrite "*"
       if result mod 10 == 0:
         directWrite " "
+      elif result mod 5 == 0:
+        directWrite "."
+      for line in imgFile:
+        var
+          resRow = newTable[string, string]()
+          platePos = expandWell(line["Metadata_Well"])
+        resRow["plateColumn"] = $platePos.column
+        resRow["plateRow"] = $platePos.row
+        for hd in line.keys:
+          if hd in resultHeaders:
+            resRow[hd] = line[hd]
+        resultFile.writeRow(resRow)
   echo " "
   resultFile.close
 
