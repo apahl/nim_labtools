@@ -8,6 +8,8 @@ import csvtable  # https://github.com/apahl/csvtable
 type
   Layout = TableRef[string, string]
 
+const batchCol = "Batch_ID"  # the name of the Batch_Id column in the delivery csv file
+
 proc newLayout(): Layout =
   new(result)
   result[] = initTable[string, string]()
@@ -61,7 +63,7 @@ proc readDelivLayout(plateDelivFn: string): Layout =
   # read the layout of the COMAS delivery plate:
   discard plateDelivFile.open(plateDelivFn, sep=',')
   for line in plateDelivFile:
-    result[line["Address_384"]] = line["Batch_ID"]
+    result[line["Address_384"]] = line[batchCol]
 
 proc genLayout(plateDelivFn, echoReportFn: string): Layout =
   result = newLayout()
