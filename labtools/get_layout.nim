@@ -8,7 +8,9 @@ import csvtable  # https://github.com/apahl/csvtable
 type
   Layout = TableRef[string, string]
 
-const batchCol = "Batch_ID"  # the name of the Batch_Id column in the delivery csv file
+const
+  batchCol = "Batch_ID"  # the name of the Batch_Id column in the delivery csv file
+  version  = "0.3.0"
 
 proc newLayout(): Layout =
   new(result)
@@ -50,9 +52,9 @@ proc formatWell(well: string): string =
 
 proc write(layout: Layout, fn="layout.csv") =
   var layoutFile = open(fn, fmWrite)
-  layoutFile.writeLine("Batch_Id,WellType,Well")
+  layoutFile.writeLine("Batch_Id,WellType,Conc [M],Well")
   for well, cpdId in layout:
-    layoutFile.writeLine($cpdId & "," & well)
+    layoutFile.writeLine(cpdId & "," & well)
 
 proc readDelivLayout(plateDelivFn: string): Layout =
   result = newLayout()
@@ -74,32 +76,35 @@ proc genLayout(plateDelivFn, echoReportFn: string): Layout =
     if elmnt.kind == xnElement and elmnt.tag == "reportbody":
       for rec in elmnt:
         if rec.kind == xnElement and rec.tag == "record":
-          var cpd, srcWell, destWell: string
+          var cpd, srcWell, destWell, destConc: string
           for field in rec:
             if field.kind == xnElement:
               case field.tag
-                of "CompoundName": cpd = field.innerText
-                of "SrcWell": srcWell = formatWell(field.innerText)
-                of "DestWell": destWell = formatWell(field.innerText)
+                of "CompoundName": cpd      = field.innerText
+                of "SrcWell":      srcWell  = formatWell(field.innerText)
+                of "DestWell":     destWell = formatWell(field.innerText)
+                of "DestConc":     destConc = field.innerText
                 else: discard
-          if destWell in result:
+          if destWell in result and result[destWell] != "DMSO,Control,":
             raise newException(ValueError, "destWell " & destWell & " already present in result.")
           if cpd == "":
-            result[destWell] = "DMSO,Control"
+            result[destWell] = "DMSO,Control,"
           else:
-            result[destWell] = delivLayout[srcWell] & ",Compound"
+            result[destWell] = delivLayout[srcWell] & ",Compound," & destConc
 
 
 when isMainModule:
-    if os.paramCount() != 2:
-      echoHelp()
-      quit(0)
-    let
-      plateDelivFn = os.paramStr(1)
-      echoReportFn = os.paramStr(2)
-      # layoutPath = os.splitPath(plateDelivFn).head
-    checkFile(plateDelivFn, ".csv")
-    checkFile(echoReportFn, ".xml")
-    var layout = genLayout(plateDelivFn, echoReportFn)
-    layout.write("layout.csv")
-    echo "Layout was generated."
+  echo "Plate Layout"
+  echo "written in Nim, © 2017, COMAS, v", version, "\n"
+  if os.paramCount() != 2:
+    echoHelp()
+    quit(0)
+  let
+    plateDelivFn = os.paramStr(1)
+    echoReportFn = os.paramStr(2)
+    # layoutPath = os.splitPath(plateDelivFn).head
+  checkFile(plateDelivFn, ".csv")
+  checkFile(echoReportFn, ".xml")
+  var layout = genLayout(plateDelivFn, echoReportFn)
+  layout.write("layout.csv")
+  echo "Layout was generated."
