@@ -24,6 +24,7 @@ const
                  "_X", "_Y", "ImageNumber", "Parent_Nuclei", "Euler", "Parent_Cells",
                  "Intensity","Parent_Nuclei"]
   numLinesExp = 3456
+  version     = "0.5.1"
 
 proc echoHelp =
   echo "\nConcatenate all CellProfiler `Image.csv` result files."
@@ -127,11 +128,13 @@ proc concat_cp_folder*(folder: string): int =
 
 
 when isMainModule:
-    if os.paramCount() != 1:
-      echoHelp()
-    let folder = os.paramStr(1)
-    if os.existsDir(folder):
-      let numOfDirs = concat_cp_folder(folder)
-      echo "\nResult files from ", numOfDirs, " subdirs were combined."
-    else:
-      echo("# Dir does not exist.")
+  echo "Cell Profiler result file concatenator"
+  echo "written in Nim, © 2017, COMAS, v", version, "\n"
+  if os.paramCount() != 1:
+    echoHelp()
+  let folder = os.paramStr(1)
+  if os.existsDir(folder):
+    let numOfDirs = concat_cp_folder(folder)
+    echo "\nResult files from ", numOfDirs, " subdirs were combined."
+  else:
+    echo("# Dir does not exist.")
