@@ -23,6 +23,7 @@ const
   exclHeaders = ["Object", "Location", "Orientation", "Edge", "Zernike",
                  "_X", "_Y", "ImageNumber", "Parent_Nuclei", "Euler", "Parent_Cells",
                  "Intensity","Parent_Nuclei"]
+  numLinesExp = 3456
 
 proc echoHelp =
   echo "\nConcatenate all CellProfiler `Image.csv` result files."
@@ -87,6 +88,7 @@ proc concat_cp_folder*(folder: string): int =
     firstFolder    = true
     resultFile: CSVTblWriter
     resultHeaders: seq[string]
+    lnCtr = 0
 
   echo "Concatenating folders..."
   stdout.flushFile
@@ -113,12 +115,15 @@ proc concat_cp_folder*(folder: string): int =
           platePos = expandWell(line["Metadata_Well"])
         resRow["plateColumn"] = $platePos.column
         resRow["plateRow"] = $platePos.row
+        lnCtr += 1
         for hd in line.keys:
           if hd in resultHeaders:
             resRow[hd] = line[hd]
         resultFile.writeRow(resRow)
   echo " "
   resultFile.close
+  if lnCtr != numLinesExp:
+    echo "WARNING: total number of lines (", lnCtr, ") does not equal expected number of lines (", numLinesExp, ")!"
 
 
 when isMainModule:
