@@ -72,7 +72,7 @@ proc selectHeaders(headers: seq[string]): seq[string] =
       if hd.find(ihd) >= 0:
         keep = true  # keep in any case
         break
-      if hd.startsWith("Median_"):
+      if hd.startsWith("Median_") or hd.startsWith("Mean_"):
         keep = true  # keep maybe...,
         for ehd in exclHeaders:
           if hd.find(ehd) >= 0:  # ...if not in the exclHeaders list
