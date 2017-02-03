@@ -9,7 +9,7 @@
 # Exclude:
 # Location,Orientation,Edge
 import os,         # `/`
-       strutils,   # isDigit, parseInt, find
+       strutils,   # isDigit, parseInt, find, repeat
        algorithm,  # sort
        tables
 
@@ -36,6 +36,11 @@ proc echoHelp =
 template directWrite(s: string): untyped =
   stdout.write s
   stdout.flushFile
+
+proc padLeft(ctr: int, digits=3, padChar=' '): string =
+  let ctrStr = $ctr
+  result = padChar.repeat(digits - ctrStr.len)
+  result.add(ctrStr)
 
 proc formatWell(well: string): string =
   ## reformat "A1" to "A01", etc., if necessary
@@ -105,11 +110,7 @@ proc concat_cp_folder*(folder: string): int =
         resultHeaders.add("plateRow")
         resultFile.open(folder / "Results.csv", resultHeaders, sep=',')
       result += 1
-      directWrite "*"
-      if result mod 10 == 0:
-        directWrite " "
-      elif result mod 5 == 0:
-        directWrite "."
+      directWrite "\r " & padLeft(result) & "..."
       for line in imgFile:
         var
           resRow = newTable[string, string]()
@@ -121,7 +122,7 @@ proc concat_cp_folder*(folder: string): int =
           if hd in resultHeaders:
             resRow[hd] = line[hd]
         resultFile.writeRow(resRow)
-  echo " "
+  echo ""
   resultFile.close
   if lnCtr != numLinesExp:
     echo "WARNING: total number of lines (", lnCtr, ") does not equal expected number of lines (", numLinesExp, ")!"
