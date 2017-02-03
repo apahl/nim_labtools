@@ -120,7 +120,10 @@ proc concat_cp_folder*(folder: string): int =
         lnCtr += 1
         for hd in line.keys:
           if hd in resultHeaders:
-            resRow[hd] = line[hd]
+            var val = line[hd]
+            if val == "nan":  # KNIME File Reader can not handle "nan"
+              val = ""
+            resRow[hd] = val
         resultFile.writeRow(resRow)
   echo ""
   resultFile.close
