@@ -1,80 +1,85 @@
 import os,
-       strutils   # unindent
+       iup,
+       get_layout
 
-import ui/ui      # https://github.com/nim-lang/ui
-# from ui/rawui import controlEnable, controlDisable
-ui.init()
-
-const lblDefault = "Select files, then press start..."
-
+const constBtnSize = "150x"
 var
-  mainWin: Window
-  btnStart: Button
-  lbl: Label
-  validDelivFile, validEchofile: bool
+  btnStart, lblStatus: PIhandle
+  fnDeliv, fnEcho, lastPath: string
 
-proc showManual() =
-  let manualText = """
-  Get Layout
-  A tool to combine the layouts from the delivery plate and the echo assay plate.
-  The result is a table with two columns: Assay plate well and Batch_Id
+template enableStart() =
+  if fnDeliv.len > 0 and fnEcho.len > 0:
+    lblStatus.setAttribute("TITLE", "Press Start.")
+    btnStart.setAttribute("ACTIVE", "YES")
 
-  The tool takes two input files:
-  1. <delivery file.csv> - the COMAS plate delivery file
-  2. <Echo result file.xml>: Echo result file for the assy plate"
-  The CSV input file needs to be comma-separated.
-  The result file is written into the folder where the Echo result file is located.
+proc onBtnDelivClicked(ih: PIhandle): cint {.cdecl.} =
+  # iup.message("Delivery", "You clicked the Delivery button!")
+  echo "Delivery button clicked."
+  var fileDialog = fileDlg()
+  discard fileDialog.setAttributes("TITLE=Choose Delivery File, ALLOWNEW=FALSE, EXTFILTER=CSV|*.csv|")
+  if lastPath.len > 0:
+    fileDialog.setAttribute("DIRECTORY", lastPath)
+  popup(fileDialog, IUP_CENTER, IUP_CENTER)
+  fnDeliv = $fileDialog.getAttribute("VALUE")
+  lastPath = os.splitPath(fnDeliv).head
+  enableStart()
 
-  © 2017,  COMAS"""
-  msgBox(mainWin, "Manual", unindent(manualText, 2))
+proc onBtnEchoClicked(ih: PIhandle): cint {.cdecl.} =
+  # iup.message("Delivery", "You clicked the Delivery button!")
+  echo "Echo button clicked."
+  var fileDialog = fileDlg()
+  discard fileDialog.setAttributes("TITLE=Choose Echo File, ALLOWNEW=FALSE, EXTFILTER=XML|*.xml|")
+  if lastPath.len > 0:
+    fileDialog.setAttribute("DIRECTORY", lastPath)
+  popup(fileDialog, IUP_CENTER, IUP_CENTER)
+  fnEcho = $fileDialog.getAttribute("VALUE")
+  lastPath = os.splitPath(fnEcho).head
+  enableStart()
 
-proc onBtnDelivClicked() =
-  enable(btnStart)
-  discard
+proc onBtnStartClicked(ih: PIhandle): cint {.cdecl.} =
+  echo "Start button clicked!"
+  lblStatus.setAttribute("TITLE", "Started.")
+  let layout = genLayout(fnDeliv, fnEcho)
+  layout.write(lastPath / "layout.csv")
+  lblStatus.setAttribute("TITLE", "Layout written. Finished.")
 
-proc onBtnEchoClicked() =
-  discard
 
-proc onBtnStartClicked() =
-  discard
+when isMainModule:
+  var lblStatusTxt = "Choose files, then press Start."
 
-proc main() =
-  var
-    btnDeliv, btnEcho: Button
-    leDeliv, leEcho: Entry
+  discard iup.open(nil, nil)
+  var btnDeliv = button("Choose File...", nil)
+  discard btnDeliv.setCallback("ACTION", cast[ICallback](onBtnDelivClicked))
+  btnDeliv.setAttribute("MINSIZE", constBtnSize)
 
-  var menu = newMenu("Help")
-  menu.addItem("Manual", showManual)
+  var btnEcho = button("Choose File...", nil)
+  discard btnEcho.setCallback("ACTION", cast[ICallback](onBtnEchoClicked))
+  btnEcho.setAttribute("MINSIZE", constBtnSize)
 
-  mainWin = newWindow("Get Layout", 300, 170, true)
-  mainWin.margined = true
-  mainWin.onClosing = (proc (): bool = return true)
+  btnStart = button("Start", nil)
+  discard btnStart.setCallback("ACTION", cast[ICallback](onBtnStartClicked))
+  btnStart.setAttribute("MINSIZE", constBtnSize)
+  btnStart.setAttribute("ACTIVE", "NO")
 
-  let vBox = newVerticalBox(true)
-  leDeliv = newEntry("")
-  vBox.add(leDeliv)
-  btnDeliv = newButton("Choose Plate Delivery File", onBtnDelivClicked)
-  vBox.add(btnDeliv)
-  #------------------------------------------------------------------------
-  vBox.add(newLabel(" "))  # insert some space
-  #------------------------------------------------------------------------
-  leEcho = newEntry("")
-  vBox.add(leEcho)
-  btnEcho = newButton("Choose Echo Report File", onBtnEchoClicked)
-  vBox.add(btnEcho)
-  #------------------------------------------------------------------------
-  vBox.add(newLabel(" "))  # insert some space
-  #------------------------------------------------------------------------
-  btnStart = newButton("Start!", onBtnStartClicked)
-  disable(btnStart)
-  vBox.add(btnStart)
-  #------------------------------------------------------------------------
-  lbl = newLabel(lblDefault)
-  vBox.add(lbl)
-  #------------------------------------------------------------------------
-  mainWin.setChild(vBox)
+  lblStatus = label(lblStatusTxt)
+  lblStatus.setAttribute("NAME", "STATUSBAR")
+  lblStatus.setAttribute("EXPAND", "HORIZONTAL")
+  lblStatus.setAttribute("PADDING", "10x5")
 
-  show(mainwin)
-  mainLoop()
+  var vb = vbox(label("\nDelivery Layout:"),
+                btnDeliv,
+                label("\nEcho Result File:"),
+                btnEcho,
+                label(""),
+                btnStart,
+                lblStatus, nil)
+  vb.setAttribute("GAP", "5")
+  vb.setAttribute("ALIGNMENT", "ACENTER")
 
-main()
+  var dlg = dialog(vb)
+  dlg.setAttribute("TITLE", "Generate Layout")
+
+  discard dlg.showXY(IUP_CENTER, IUP_CENTER)
+  discard mainLoop()
+
+  iup.close()

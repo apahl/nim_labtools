@@ -17,7 +17,8 @@ proc newLayout(): Layout =
   result[] = initTable[string, string]()
 
 proc echoHelp =
-  let msg = """get_layout
+  let msg = """
+  get_layout
   A tool to combine the layouts from the delivery plate and the echo assay plate.
   The result is a table with two columns: Assay plate well and Batch_Id
 
@@ -28,15 +29,20 @@ proc echoHelp =
   The result is written into the folder where the Echo result file was loaded."""
   echo unindent(msg, 2)
 
-proc checkFile(fn, ext: string) =
+proc checkFile(fn, ext: string): string =
   ## check if the file exists and has the right extension
+  result = ""
   let fileExt = os.splitFile(fn)
   if not os.fileExists(fn):
-    echo "File " & fn & " does not exist."
-    echoHelp()
-    quit(1)
+    result = "File " & fn & " does not exist."
+    return
   if fileExt.ext != ext:
-    echo "File " & fn & " has the wrong extension. `" & ext & "` was expected."
+    result = "File " & fn & " has the wrong extension. `" & ext & "` was expected."
+
+template validateFile(fn: string, ext: string): untyped =
+  let msg = checkFile(fn, ext)
+  if msg.len > 0:
+    echo msg
     echoHelp()
     quit(1)
 
@@ -50,7 +56,7 @@ proc formatWell(well: string): string =
     if well[1].isAlphaAscii:
       result = well[0..1] & "0" & well[2]
 
-proc write(layout: Layout, fn="layout.csv") =
+proc write*(layout: Layout, fn="layout.csv") =
   var layoutFile = open(fn, fmWrite)
   layoutFile.writeLine("Batch_Id,WellType,Conc [M],Well")
   for well, cpdId in layout:
@@ -67,7 +73,7 @@ proc readDelivLayout(plateDelivFn: string): Layout =
   for line in plateDelivFile:
     result[line["Address_384"]] = line[batchCol]
 
-proc genLayout(plateDelivFn, echoReportFn: string): Layout =
+proc genLayout*(plateDelivFn, echoReportFn: string): Layout =
   result = newLayout()
   let
     delivLayout = readDelivLayout(plateDelivFn)
@@ -103,8 +109,10 @@ when isMainModule:
     plateDelivFn = os.paramStr(1)
     echoReportFn = os.paramStr(2)
     # layoutPath = os.splitPath(plateDelivFn).head
-  checkFile(plateDelivFn, ".csv")
-  checkFile(echoReportFn, ".xml")
+  validateFile(plateDelivFn, ".csv")
+  validateFile(echoReportFn, ".xml")
   var layout = genLayout(plateDelivFn, echoReportFn)
   layout.write("layout.csv")
   echo "Layout was generated."
+
+
