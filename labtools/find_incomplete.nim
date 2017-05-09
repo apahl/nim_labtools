@@ -2,7 +2,7 @@ import os,         # `/`
        strutils    # isDigit, parseInt, find, repeat
 
 const
-  version     = "0.1.5"
+  version     = "0.1.6"
 
 proc echoHelp =
   echo "\nFind CellProfiler array tasks that did not finish by scanning the log files"
@@ -13,7 +13,7 @@ proc echoHelp =
 proc scanLogFiles(numJobs: int) =
   ## Scans the SGE array job log files in the current directory
   let
-    globLogFile = "cellprof_" & $numJobs & ".o*"
+    globLogFile = "cellprof" & $numJobs & ".o*"
     size: int = 3456 div numJobs  # number of images per task (48 tasks * 72 images = 3456)
   var
     incompleteTasks: seq[string] = @[]
