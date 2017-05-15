@@ -7,7 +7,7 @@ const
 proc echoHelp =
   echo "\nFind CellProfiler array tasks that did not finish by scanning the log files"
   echo "in the *current* directory."
-  echo "Usage: find_incomplete <num_of_jobs (48 or 96)>"
+  echo "Usage: check_cp_logs <num_of_jobs (48 or 96)>"
   quit(0)
 
 proc scanLogFiles(numJobs: int) =
@@ -24,7 +24,7 @@ proc scanLogFiles(numJobs: int) =
       slice_str = logfile.split(".")[^1]
       slice = slice_str.parseInt
       lastImage = slice * size
-      lastLine = "Image # " & $lastImage & ", module CreateBatchFiles # 20"
+      lastLine = "Image # " & $lastImage & ", module ExportToSpreadsheet # 19"
       f = open(logFile)
       log = f.readAll
       pos = log.rfind(lastLine)
@@ -48,7 +48,7 @@ proc scanLogFiles(numJobs: int) =
 
 
 when isMainModule:
-  echo "Find incomplete CellProfiler array tasks"
+  echo "Check CellProfiler logs for incomplete array tasks"
   echo "written in Nim, © 2017, COMAS, v", version, "\n"
   if os.paramCount() != 1:
     echoHelp()
