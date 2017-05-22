@@ -24,7 +24,7 @@ const
                  "_X", "_Y", "ImageNumber", "Parent_Nuclei", "Euler", "Parent_Cells",
                  "Intensity","Parent_Nuclei"]
   numLinesExp = 3456  # expected total number of data lines (= 384 wells x 9 sites)
-  version     = "0.5.1"
+  version     = "0.6.0"
 
 proc echoHelp =
   echo "\nConcatenate all CellProfiler `Image.csv` result files."
@@ -122,7 +122,10 @@ proc concat_cp_folder*(folder: string): int =
           if hd in resultHeaders:
             var val: string
             if hd == "Metadata_Plate":
-              val = folder  # use the name of the folder as plate name
+              var plateName = folder
+              if folder.endsWith("_output"):
+                plateName = folder[0..^8]
+              val = plateName  # use the name of the folder (without '_output') as plate name
             else:
               val = line[hd]
               if val == "nan":  # KNIME File Reader can not handle "nan"
