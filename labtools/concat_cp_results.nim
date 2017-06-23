@@ -99,16 +99,16 @@ proc concat_cp_folder*(folder: string): int =
   echo "Concatenating folders..."
   stdout.flushFile
   for kind, path in os.walkDir(folder, relative=true):
-    if kind == pcDir and path[0].isDigit and os.fileExists(folder / path / "Image.csv"):
+    if kind == pcDir and path[0].isDigit and os.fileExists(folder / path / "Image.tsv"):
       var
         imgFile: CSVTblReader
-        imgHeaders = imgFile.open(folder / path / "Image.csv", sep=',')
+        imgHeaders = imgFile.open(folder / path / "Image.tsv", sep='\t')
       if firstFolder:
         firstFolder = false
         resultHeaders = selectHeaders(imgHeaders)
         resultHeaders.add("plateColumn")
         resultHeaders.add("plateRow")
-        resultFile.open(folder / "Results.csv", resultHeaders, sep=',')
+        resultFile.open(folder / "Results.tsv", resultHeaders, sep='\t')
       result += 1
       directWrite "\r " & padLeft(result) & "..."
       for line in imgFile:
