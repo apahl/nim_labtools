@@ -13,7 +13,7 @@ import os,         # `/`
        algorithm,  # sort
        tables
 
-import csvtable # https://github.com/apahl/csvtable
+import csvtable  # https://github.com/apahl/csvtable
 # Metadata_Plate,Metadata_Site,Metadata_Well
 const
   rows = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P",
@@ -24,13 +24,13 @@ const
                  "_X", "_Y", "ImageNumber", "Parent_Nuclei", "Euler", "Parent_Cells",
                  "Intensity","Parent_Nuclei"]
   numLinesExp = 3456  # expected total number of data lines (= 384 wells x 9 sites)
-  version     = "0.6.0"
+  version     = "0.7.0"
 
 proc echoHelp =
-  echo "\nConcatenate all CellProfiler `Image.csv` result files."
+  echo "\nConcatenate all CellProfiler `Image.txt` result files into one `Results.tsv` file."
   echo "Usage: concat_cp_results <folder>"
   echo "<folder>: directory which contains the numerical subdirs that contain"
-  echo "          the CP `Image.csv` result files."
+  echo "          the CP `Image.txt` result files."
   quit(0)
 
 template directWrite(s: string): untyped =
@@ -99,10 +99,10 @@ proc concat_cp_folder*(folder: string): int =
   echo "Concatenating folders..."
   stdout.flushFile
   for kind, path in os.walkDir(folder, relative=true):
-    if kind == pcDir and path[0].isDigit and os.fileExists(folder / path / "Image.tsv"):
+    if kind == pcDir and path[0].isDigit and os.fileExists(folder / path / "Image.txt"):
       var
         imgFile: CSVTblReader
-        imgHeaders = imgFile.open(folder / path / "Image.tsv", sep='\t')
+        imgHeaders = imgFile.open(folder / path / "Image.txt", sep='\t')
       if firstFolder:
         firstFolder = false
         resultHeaders = selectHeaders(imgHeaders)
