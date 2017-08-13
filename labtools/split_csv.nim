@@ -1,8 +1,8 @@
 ## Split a csv file into multiple files of the given length,
 ## e.g. for processing on a cluster.
 
-import os,       #
-       ospaths,  # /, fileExists, splitFile
+import os,       # existsFile
+       ospaths,  # /, splitFile
        strutils  # parseInt, align
 
 const version = "0.1.0"
