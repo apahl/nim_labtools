@@ -1,5 +1,4 @@
-## Split a csv file into multiple files of the given length,
-## e.g. for processing on a cluster.
+## Replace text in files..
 
 import os,       # existsDir
        ospaths,  # /, walkDirRec
