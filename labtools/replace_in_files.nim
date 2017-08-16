@@ -1,15 +1,18 @@
-## Replace text in files..
+## Replace text in files.
 
-import os,       # existsDir
-       ospaths,  # /, walkDirRec
+import os,       # existsDir, /, walkDirRec
        strutils  # in[str], replace
 
 const version = "0.1.0"
 
 proc echoHelp =
-  echo "\nReplace the give text with the new file recursively."
-  echo "Usage: replace_in_files <start_dir> <filename_substring> <text_old> <text_new>"
-  echo "Both text parameters should be put in quotes."
+  let
+    appName = extractFilename(getAppFilename())
+    help = """
+      Replace the given text with the new file recursively.
+      Usage: $1 <start_dir> <filename_substring> <text_old> <text_new>
+      Both text parameters should be put in quotes.""".unindent % appName
+  echo help
   quit(0)
 
 proc replaceTextRecur(startDir, filename, textOld, textNew: string): int =
