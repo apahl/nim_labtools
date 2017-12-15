@@ -2,7 +2,7 @@ import os,         # `/`
        strutils    # isDigit, parseInt, find, repeat
 
 const
-  version     = "0.1.6"
+  version     = "0.2.0"
 
 proc echoHelp =
   echo "\nFind CellProfiler array tasks that did not finish by scanning the log files"
@@ -11,9 +11,9 @@ proc echoHelp =
   quit(0)
 
 proc scanLogFiles(numJobs: int) =
-  ## Scans the SGE array job log files in the current directory
+  ## Scans the SLURM job array log files in the current directory
   let
-    globLogFile = "cellprof" & $numJobs & ".o*"
+    globLogFile = "cp" & $numJobs & "*.txt"
     size: int = 3456 div numJobs  # number of images per task (48 tasks * 72 images = 3456)
   var
     incompleteTasks: seq[string] = @[]
@@ -21,7 +21,8 @@ proc scanLogFiles(numJobs: int) =
   for logFile in os.walkFiles(globLogFile):
     ctr += 1
     let
-      slice_str = logfile.split(".")[^1]
+      end_str = logfile.split("-")[^1]
+      slice_str = end_str.split(".")[0]
       slice = slice_str.parseInt
       lastImage = slice * size
       lastLine = "Image # " & $lastImage & ", module ExportToSpreadsheet # 19"
