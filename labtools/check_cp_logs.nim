@@ -1,3 +1,5 @@
+# nim -d:release -o:bin/check_cp_logs c labtools/check_cp_logs.nim
+
 import os,         # `/`
        strutils    # isDigit, parseInt, find, repeat
 
@@ -25,7 +27,7 @@ proc scanLogFiles(numJobs: int) =
       slice_str = end_str.split(".")[0]
       slice = slice_str.parseInt
       lastImage = slice * size
-      lastLine = "Image # " & $lastImage & ", module ExportToSpreadsheet # 19"
+      lastLine = "Image # " & $lastImage & ", module ExportToSpreadsheet # 18"
       f = open(logFile)
       log = f.readAll
       pos = log.rfind(lastLine)

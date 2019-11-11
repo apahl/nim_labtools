@@ -1,17 +1,19 @@
 ## Concat multiple CSV files into one.
+# nim -d:release -o:bin/concat_csv c labtools/concat_csv.nim
 
-import os,       # walkFiles
-       ospaths,  # /, splitFile
-       strutils,  # parseInt, align, replace
+import os,        # walkFiles
+       ospaths,   # /, splitFile
+       strutils,  # parseInt, replace
        csvtable
 
-const version = "0.1.0"
+# 0.2.0 uses new csvtable v0.3.0 API
+const version = "0.2.0"
 
 proc echoHelp =
     let
       appName = extractFilename(getAppFilename())
       help = """
-        Concat multiple CSV files into one large one.
+        Concat multiple CSV files into one large file.
         Usage: $1 "filename_w_wildcards" [sep]
         The first parameter should be put in quotes.
         The second parameter separator is optional, default is tab ("\t").""".unindent % appName
@@ -20,7 +22,6 @@ proc echoHelp =
 
 proc concatCsv(fnPattern: string, sep: char) =
   var
-    csvIn: CSVTblReader
     csvOut: CSVTblWriter
     headersOut: seq[string] = @[]
     firstFile = true
@@ -30,13 +31,12 @@ proc concatCsv(fnPattern: string, sep: char) =
     outFile = fnPattern.replace("*", "")
 
   for fn in walkFiles(fnPattern):
+    var csvIn = newCSVTblReader(fn, sep=sep)
     fileCounter += 1
-    let
-      headersIn = csvIn.open(fn, sep=sep)
     if firstFile:
       firstFile = false
-      headersOut = headersIn
-      csvOut.open(outFile, headersOut, sep=sep)
+      headersOut = csvIn.headers
+      csvOut = newCSVTblWriter(outFile, headersOut, sep=sep)
     for dIn in csvIn:
       lineCounter += 1
       csvOut.writeRow(dIn)
@@ -47,7 +47,7 @@ proc concatCsv(fnPattern: string, sep: char) =
 
 when isMainModule:
   echo "CSV File Concatenator"
-  echo "written in Nim, © 2017, COMAS, v", version, "\n"
+  echo "written in Nim, © 2018, COMAS, v", version, "\n"
   let numParams = os.paramCount()
   if numParams < 1 or numParams > 2:
     echoHelp()
