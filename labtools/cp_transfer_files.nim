@@ -3,9 +3,15 @@
 
 import os, # paramCount, paramStr, dirExists, fileExists, /
   strutils, # %, unindent
-  algorithm # sort
+  algorithm, # sort
+  terminal # colored terminal output
 
 const version = "0.1.0"
+
+template colorEcho(color: ForegroundColor; args: varargs[untyped]) =
+  setForegroundColor(color)
+  echo args
+  resetAttributes()
 
 # template debugMsg(msg: varargs[untyped]) =
 #   when not defined(release):
@@ -15,7 +21,6 @@ proc echoHelp(retCode: int) =
   let
     appName = extractFilename(getAppFilename())
     help = """
-
       Copy Echo transfer files into the correct Cell Painting folders.
       Usage: $1 <source folder> <plate name>
           source folder: The folder which contains the transfer XML files.
@@ -32,12 +37,12 @@ proc validateInput(): (string, string) = # tuple[src: string, plate: string] =
     src = os.paramStr(1)
     plate = os.paramStr(2)
   if not dirExists(src):
-    echo "Source directory ", src, " does not exist."
+    colorEcho(fgRed, "ERROR: Source directory ", src, " does not exist.\n")
     echoHelp(1)
   for repl in @["A", "B", "C"]:
     let plateName = "$1-$2" % [plate, repl]
     if not dirExists(plateName):
-      echo "Target plate $1 does not exist." % plateName
+      colorEcho(fgRed, "ERROR: Target plate $1 does not exist.\n" % plateName)
       echoHelp(2)
   result = (src, plate)
 
@@ -49,7 +54,7 @@ proc cpTransfer(src, plate: string) =
       continue
     xmlFiles.add(fn)
   if xmlFiles.len != 3:
-    echo "Incorrect number of XML files found ($1)." % $xmlFiles.len
+    colorEcho(fgRed, "ERROR: Incorrect number of XML files found ($1).\n" % $xmlFiles.len)
     quit(3)
   xmlFiles.sort(cmp = cmpIgnoreCase)
   let repls = @["A", "B", "C"]
@@ -60,14 +65,15 @@ proc cpTransfer(src, plate: string) =
     echo "Checking for existing XML file in $1..." % plateName
     for kind, path in walkDir(plateName):
       if kind == pcFile and path.contains(".xml"):
-        echo "  XML file already present. Aborting."
+        colorEcho(fgRed, "  ERROR: XML file already present. Aborting.\n")
         quit(4)
     echo "Copying XML file..."
     copyFile(xmlFiles[ix], plateName / baseFn)
 
 
 when isMainModule:
-  echo "Copy Echo Transfer Files"
-  echo "written in Nim, © 2019, COMAS, v", version, "\n"
+  system.addQuitProc(resetAttributes)
+  colorEcho(fgCyan, "Copy Echo Transfer Files")
+  colorEcho(fgCyan, "written in Nim, © 2019, COMAS, v", version, "\n")
   let (src, plate) = validateInput()
   cpTransfer(src, plate)
