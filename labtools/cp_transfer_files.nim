@@ -1,7 +1,7 @@
 ## Copy Echo transfer files into the correct Cell Painting folders.
 # nim -d:release -o:bin/cp_transfer_files c labtools/cp_transfer_files.nim
 
-import os, # paramCount, paramStr, dirExists, fileExists, /
+import os, # paramCount, paramStr, dirExists, fileExists, `/`
   strutils, # %, unindent
   algorithm, # sort
   terminal # colored terminal output
@@ -67,7 +67,7 @@ proc cpTransfer(src, plate: string) =
       if kind == pcFile and path.contains(".xml"):
         colorEcho(fgRed, "  ERROR: XML file already present. Aborting.\n")
         quit(4)
-    echo "Copying XML file..."
+    echo "Copying XML file $1 --> $2 ..." % [xmlFiles[ix], plateName]
     copyFile(xmlFiles[ix], plateName / baseFn)
 
 
