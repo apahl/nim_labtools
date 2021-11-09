@@ -1,15 +1,15 @@
 ## Split a csv file into multiple files of the given length,
 ## e.g. for processing on a cluster.
+# nim -d:release -o:bin/csvsplit c labtools/csvsplit.nim
 
-import os,       # existsFile
-       ospaths,  # /, splitFile
-       strutils  # parseInt, align
+import std/os # fileExists, /, splitFile
+import std/strutils # parseInt, align
 
 const version = "0.1.0"
 
 proc echoHelp =
   echo "\nSplit a large CSV file into smaller files of given length."
-  echo "Usage: split_csv <orig_file.csv> <length>"
+  echo "Usage: csvsplit <orig_file.csv> <length>"
   quit(0)
 
 proc splitcsv(fn: string, length: int) =
@@ -28,7 +28,7 @@ proc splitcsv(fn: string, length: int) =
       fileCounter += 1
       let
         (dir, name, ext) = splitFile(fn)
-        outFn = dir / name & "-" & align($fileCounter, 3, '0') & ext
+        outFn = dir / name & "-" & align($fileCounter, 2, '0') & ext
       outFile = open(outFn, fmWrite)
       outFile.writeLine(header)
     lineCounter += 1
@@ -53,7 +53,7 @@ when isMainModule:
   except ValueError:
     echo "Length ", os.paramStr(2), " could not be converted to a number."
     echoHelp()
-  if os.existsFile(fn_orig):
+  if os.fileExists(fn_orig):
     splitcsv(fn_orig, length)
   else:
     echo "# File ", fn_orig, " does not exist."

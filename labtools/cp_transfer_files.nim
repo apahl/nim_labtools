@@ -1,12 +1,14 @@
 ## Copy Echo transfer files into the correct Cell Painting folders.
-# nim -d:release -o:bin/cp_transfer_files c labtools/cp_transfer_files.nim
+# nim --gcc.exe:musl-gcc --gcc.linkerexe:musl-gcc --passL:-static -d:release -o:bin/cp_transfer_files c labtools/cp_transfer_files.nim
+# scp bin/cp_transfer_files clem:bin/
 
-import os, # paramCount, paramStr, dirExists, fileExists, `/`
-  strutils, # %, unindent
-  algorithm, # sort
-  terminal # colored terminal output
+import std / os, # paramCount, paramStr, dirExists, fileExists, `/`
+  std / strutils, # %, unindent
+  std / algorithm, # sort
+  std / terminal, # colored terminal output
+  std / exitprocs # addExitProc
 
-const version = "0.1.0"
+const version = "0.1.1"
 
 template colorEcho(color: ForegroundColor; args: varargs[untyped]) =
   setForegroundColor(color)
@@ -47,7 +49,7 @@ proc validateInput(): (string, string) = # tuple[src: string, plate: string] =
   result = (src, plate)
 
 proc cpTransfer(src, plate: string) =
-  let fnPattern = src / "E5XX-1030_Transfer_*.xml"
+  let fnPattern = src / "E5XX*_Transfer_*.xml"
   var xmlFiles: seq[string]
   for fn in walkFiles(fnPattern):
     if fn.contains("Exception"):
@@ -72,7 +74,7 @@ proc cpTransfer(src, plate: string) =
 
 
 when isMainModule:
-  system.addQuitProc(resetAttributes)
+  addExitProc(resetAttributes)
   colorEcho(fgCyan, "Copy Echo Transfer Files")
   colorEcho(fgCyan, "written in Nim, © 2019, COMAS, v", version, "\n")
   let (src, plate) = validateInput()

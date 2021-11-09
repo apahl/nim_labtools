@@ -10,7 +10,7 @@ import
   os,
   strutils,
   tables,
-  strfmt,
+  strformat,
   rawui,
   conversions
 
